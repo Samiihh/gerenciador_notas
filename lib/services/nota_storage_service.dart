@@ -55,6 +55,18 @@ class NotaStorageService {
     final List<Map<String, dynamic>> dados = notas.map((nota) {
       return nota.toMap();
     }).toList();
+
+    // transforma a lista de maps em texto JSON
+    final String texto = jsonEncode(dados);
+    // await aguarda a conclusão da gravação no dispositivo
+    await _perfs.setString(chaveNotas, texto);
+  }
+
+  Future<void> adicionarNota(Nota novaNota) async {
+    // primiero recuperamos tudo que ja estava salvo
+    final List<Nota> notas = await listarNotas();
+    notas.add(novaNota);// Insere a nova nota no fim da lista
+    await salvarLista(notas); // Grava a lista inteira novamente
   }
 
   // Recupera a nota, e retorna a String, mesmo quando não existe valor.
