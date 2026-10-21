@@ -1,4 +1,6 @@
 // Serviço: separa as regras de armazenamento dos widget da tela
+import 'dart:convert';
+
 import 'package:gerenciador_notas/models/nota.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,7 +16,7 @@ class NotaStorageService {
   // Future<List<Nota>> indica que a lista virá no futuro.
   // async permite usar await durante a leitura do dispositivo
   Future<List<Nota>> listarNotas() async {
-    // String? permite texto ou null, 
+    // String? permite texto ou null,
     final String? texto = await _perfs.getString(chaveNotas);
     // Se não há lista salva, verificamos a nota da aula 1.
     if (texto == null) {
@@ -22,7 +24,37 @@ class NotaStorageService {
       if (antiga == null || antiga.trim().isEmpty) {
         return []; // retornamos lista vazia, sem notas
       }
+
+      // Tranforma a anotação antiga em uma Nota completa
+      final Nota primeira = Nota(
+        // Horario em microssegundos gera um identificador simples
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        titulo: 'Minha Primeira Nota',
+        conteudo: antiga,
+      );
+      // salva a nota no formato novo e remove a antiga
+      await salvarLista([primeira]);
+      await _perfs.remove(chaveAntiga);
+      return [primeira]; // devolve a nota convertida
     }
+
+    // jsonDecode transforma o texto JSON em estrutura Dart
+    // as List<dynamic> informa que esperamos uma lista Dart
+    final List<dynamic> dados = jsonDecode(texto) as List<dynamic>;
+
+    // map() percorre cada elemento e transforma em nota.
+    // toList() materializa o resultado como uma lista Dart
+    return dados.map((item) {
+      return Nota.fromMap(item as Map<String, dynamic>);
+    }).toList();
+  }
+
+  // Recebe a lista completa e grava sua versão atualizada
+  Future<void> salvarLista(List<Nota> notas) async {
+    // Converte cada objeto Nota para Map com toMap()
+    final List<Map<String, dynamic>> dados = notas.map((nota) {
+      return nota.toMap();
+    }).toList();
   }
 
   // Recupera a nota, e retorna a String, mesmo quando não existe valor.
