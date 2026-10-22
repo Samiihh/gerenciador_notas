@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gerenciador_notas/screens/nota_form_screen.dart';
 import 'package:gerenciador_notas/screens/splash_screen.dart';
 
 void main() {
@@ -18,6 +19,7 @@ class GerenciadorNotasApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const SplashScreen(),
+      // home: NotaFormScreen(),
     );
   }
 }
