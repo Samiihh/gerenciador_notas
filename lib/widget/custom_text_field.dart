@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 // StatelessWidget é adequado porque o componente recebe as configuração da tela, sem gerenciar estado próprio.
 class CustomTextField extends StatelessWidget {
