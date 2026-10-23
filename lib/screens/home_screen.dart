@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:gerenciador_notas/models/nota.dart';
+
+import 'package:gerenciador_notas/provider/notas_provider.dart';
 import 'package:gerenciador_notas/screens/nota_form_screen.dart';
-import 'package:gerenciador_notas/services/nota_storage_service.dart';
+
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,19 +23,24 @@ class _HomeScreenState extends State<HomeScreen> {
   // String _notaSalva = '';
 
   // Serviços que busca os registros
-  final _storage = NotaStorageService();
+  // final _storage = NotaStorageService();
 
   // lista inicialmente vazia, sera preenchida apos a leitura
-  List<Nota> _notas = [];
+  // List<Nota> _notas = [];
 
   // true indica que os dados ainda estão sendo carregados
-  bool _carregando = true;
+  // bool _carregando = true;
 
   @override
   void initState() {
     super.initState();
     // carregarNotas();  Recuperar o valor ao abrir a home.
-    _carregarNotas(); // Inicia a leitura do armazenamento
+    // _carregarNotas(); // Inicia a leitura do armazenamento
+
+    // read acessa o provider sem obervar mudanças
+    // Aqui so iniciamos o carregamento uma vez
+    // o future é iniciado; e a interface observa o resultado
+    context.read<NotasProvider>().carregarNotas();
   }
 
   // Buscar texto salvo e esperar a leitura e atualiza a interface
@@ -47,31 +54,31 @@ class _HomeScreenState extends State<HomeScreen> {
   //   });
   // }
 
-  Future<void> _carregarNotas() async {
-    final notasSalvas = await _storage.listarNotas();
+  // Future<void> _carregarNotas() async {
+  //   final notasSalvas = await _storage.listarNotas();
 
-    if (!mounted) return;
+  //   if (!mounted) return;
 
-    setState(() {
-      _notas = notasSalvas;
-      _carregando = false;
-    });
-  }
+  //   setState(() {
+  //     _notas = notasSalvas;
+  //     _carregando = false;
+  //   });
+  // }
 
-  Future<void> _abrirCadastro() async {
-    // push abre a tela e espera o valor enviado por pop.
-    // bool? indica que aceita true, false ou null
-    final bool? cadastrou = await Navigator.push<bool>(
-      context,
-      // builder cria a tela a ser exibida
-      MaterialPageRoute(builder: (context) => const NotaFormScreen()),
-    );
+  // Future<void> _abrirCadastro() async {
+  //   // push abre a tela e espera o valor enviado por pop.
+  //   // bool? indica que aceita true, false ou null
+  //   final bool? cadastrou = await Navigator.push<bool>(
+  //     context,
+  //     // builder cria a tela a ser exibida
+  //     MaterialPageRoute(builder: (context) => const NotaFormScreen()),
+  //   );
 
-    if (!mounted) return;
-    if (cadastrou == true) {
-      await _carregarNotas(); // Atualiza a lista apos salvar
-    }
-  }
+  //   if (!mounted) return;
+  //   if (cadastrou == true) {
+  //     await _carregarNotas(); // Atualiza a lista apos salvar
+  //   }
+  // }
 
   // // esta função é chamada pelo onPressed do botão salvar
   // Future<void> salvarNota() async {
@@ -109,20 +116,46 @@ class _HomeScreenState extends State<HomeScreen> {
   //   super.dispose();
   // }
 
+  void _abrirCadastro() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotaFormScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // watch observa as alterações e reconstroi esse build quando o
+    //provider chamar notifyListeners().
+    final estado = context.watch<NotasProvider>();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Minhas notas')),
 
-      body: _carregando
+      body: estado.carregando
           ? const Center(child: CircularProgressIndicator())
-          : _notas.isEmpty
+          : estado.erro != null
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(estado.erro!),
+                  TextButton(
+                    onPressed: () {
+                      context.read<NotasProvider>().carregarNotas();
+                    },
+                    child: const Text('Tentar novamente'),
+                  ),
+                ],
+              ),
+            )
+          : estado.notas.isEmpty
           ? const Center(child: Text('Nenhuma nota Cadastrada'))
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: _notas.length,
+              itemCount: estado.notas.length,
               itemBuilder: (context, index) {
-                final nota = _notas[index];
+                final nota = estado.notas[index];
 
                 return Card(
                   child: ListTile(

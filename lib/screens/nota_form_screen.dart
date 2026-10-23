@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:gerenciador_notas/models/nota.dart';
+import 'package:gerenciador_notas/provider/notas_provider.dart';
 import 'package:gerenciador_notas/services/nota_storage_service.dart';
 import 'package:gerenciador_notas/widget/custom_text_field.dart';
+import 'package:provider/provider.dart';
 
 class NotaFormScreen extends StatefulWidget {
   const NotaFormScreen({super.key});
@@ -46,7 +48,11 @@ class _NotasFormScreenState extends State<NotaFormScreen> {
 
     // try executa o salvamento; catch trata possiveis erros.
     try {
-      await _storage.adicionarNota(nota); // aguarda gravar
+      // await _storage.adicionarNota(nota); // aguarda gravar
+
+      // read obtém o provider para executar a ação
+      await context.read<NotasProvider>().adicionarNotas(nota);
+
       if (!mounted) return;
       // pop fecha o cadastro e devolve true a Home.
       Navigator.pop(context, true);
