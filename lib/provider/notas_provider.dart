@@ -41,12 +41,26 @@ class NotasProvider extends ChangeNotifier {
   }
 
   Future<void> adicionarNotas(Nota novaNota) async {
-    // Primeiro gravamos no dispositivo, se falhar, a lista visual, não sera alterada, evitamos mostrar algo que não foi salvo 
+    // Primeiro gravamos no dispositivo, se falhar, a lista visual, não sera alterada, evitamos mostrar algo que não foi salvo
     await _storage.adicionarNota(novaNota);
     // apos de gravar busca a nova lista atualizada
     _notas = await _storage.listarNotas();
     _erro = null;
     // notificamos os widgets que usam o context.watch ou Consumer.
+    notifyListeners();
+  }
+
+  Future<void> atualizarNota(Nota notaAtualizada) async {
+    await _storage.atualizarNota(notaAtualizada); // atualizamos a nota
+    _notas = await _storage.listarNotas(); // bucamos a nova lista
+    _erro = null;
+    notifyListeners(); // atualiza a home sem regarregar a tela;
+  }
+
+  Future<void> excluirNota(String id) async {
+    await _storage.excluirNota(id);
+    _notas = await _storage.listarNotas();
+    _erro = null;
     notifyListeners();
   }
 }

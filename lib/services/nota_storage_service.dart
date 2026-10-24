@@ -65,8 +65,23 @@ class NotaStorageService {
   Future<void> adicionarNota(Nota novaNota) async {
     // primiero recuperamos tudo que ja estava salvo
     final List<Nota> notas = await listarNotas();
-    notas.add(novaNota);// Insere a nova nota no fim da lista
+    notas.add(novaNota); // Insere a nova nota no fim da lista
     await salvarLista(notas); // Grava a lista inteira novamente
+  }
+
+  Future<void> atualizarNota(Nota notaAtualizada) async {
+    final notas = await listarNotas();
+
+    //indexWhere procura a posição cuko o id corresponde ao informado
+    // se não entrar ele retorna um -1
+    final indice = notas.indexWhere((nota) => nota.id == notaAtualizada.id);
+
+    if (indice == -1) {
+      throw StateError('Nota não encontrada para edição');
+    }
+    // substitui apenas a nota localizada, mantendo as demais
+    notas[indice] = notaAtualizada;
+    await salvarLista(notas); // Grava a alteração no dispositivo
   }
 
   // Recupera a nota, e retorna a String, mesmo quando não existe valor.
@@ -77,6 +92,17 @@ class NotaStorageService {
     return nota ?? '';
   }
 
+  // delet remover o registro usando o identificador unico
+  Future<void> excluirNota(String id) async {
+    final notas = await listarNotas(); // listando as minhas notas
+
+    // removeWhere exclui itens que atendem à condição informada
+    // aqui removemos somente a nota com o id selecionado
+    notas.removeWhere((nota) => nota.id == id);
+    await salvarLista(notas); // perciste a lista sem esse registro
+  }
+
+  // antiga forma de apagar 
   // Exclui somente o valor que foi salvo na chave da nota
   Future<void> apagarNota() async {
     await _perfs.remove(chaveNotas);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gerenciador_notas/models/nota.dart';
 
 import 'package:gerenciador_notas/provider/notas_provider.dart';
 import 'package:gerenciador_notas/screens/nota_form_screen.dart';
@@ -116,10 +117,31 @@ class _HomeScreenState extends State<HomeScreen> {
   //   super.dispose();
   // }
 
-  void _abrirCadastro() {
+  void _abrirCadastro({Nota? nota}) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const NotaFormScreen()),
+      MaterialPageRoute(builder: (context) => NotaFormScreen(nota: nota)),
+    );
+  }
+
+  Future<void> _confirmarExclusao(Nota nota) async {
+    final bool? confirmou = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir nota?'),
+        content: Text('Deseja excluir"${nota.titulo}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
     );
   }
 
