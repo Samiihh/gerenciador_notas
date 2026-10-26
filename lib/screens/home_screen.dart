@@ -143,6 +143,21 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+
+    if (!mounted || confirmou != true) return;
+
+    final provider = context.read<NotasProvider>();
+
+    try {
+      await provider.excluirNota(nota.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Nota Excluida')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Erro ao excluir nota.')));
+    }
   }
 
   @override
@@ -184,6 +199,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     title: Text(nota.titulo),
                     subtitle: Text(nota.conteudo),
                     leading: const Icon(Icons.description_outlined),
+
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            _abrirCadastro(nota: nota);
+                          },
+                          icon: const Icon(Icons.outbond_outlined),
+                          tooltip: 'Editar cadastro',
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            _confirmarExclusao(nota);
+                          },
+                          icon: Icon(Icons.delete_outline),
+                          tooltip: 'Excluir nota',
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
