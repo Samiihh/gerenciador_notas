@@ -32,6 +32,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // true indica que os dados ainda estão sendo carregados
   // bool _carregando = true;
 
+  // guarda  somente o filtro visual; não altera notas salvas
+  String _pesquisa = '';
+
   @override
   void initState() {
     super.initState();
@@ -166,63 +169,100 @@ class _HomeScreenState extends State<HomeScreen> {
     //provider chamar notifyListeners().
     final estado = context.watch<NotasProvider>();
 
+    //toLowerCase ignora diferencia entre maiusculas/minusculas.
+    final termo = _pesquisa.trim().toLowerCase();
+
+    //where cria uma seleção, sem apagar notas provider
+    // toList transforma a seleção em uma lista para o listView
+    final notasFiltradas = estado.notas.where((nota) {
+      return nota.titulo.toLowerCase().contains(termo);
+    }).toList();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Minhas notas')),
 
-      body: estado.carregando
-          ? const Center(child: CircularProgressIndicator())
-          : estado.erro != null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(estado.erro!),
-                  TextButton(
-                    onPressed: () {
-                      context.read<NotasProvider>().carregarNotas();
-                    },
-                    child: const Text('Tentar novamente'),
-                  ),
-                ],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+
+            child: TextField(
+              decoration: const InputDecoration(
+                labelText: 'Pesquisar pelo titulo',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
               ),
-            )
-          : estado.notas.isEmpty
-          ? const Center(child: Text('Nenhuma nota Cadastrada'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: estado.notas.length,
-              itemBuilder: (context, index) {
-                final nota = estado.notas[index];
 
-                return Card(
-                  child: ListTile(
-                    title: Text(nota.titulo),
-                    subtitle: Text(nota.conteudo),
-                    leading: const Icon(Icons.description_outlined),
+              onChanged: (texto) {
+                setState(() => _pesquisa = texto);
+              },
+            ),
+          ),
 
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+          Expanded(
+            child: estado.carregando
+                ? const Center(child: CircularProgressIndicator())
+                : estado.erro != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        IconButton(
+                        Text(estado.erro!),
+                        TextButton(
                           onPressed: () {
-                            _abrirCadastro(nota: nota);
+                            context.read<NotasProvider>().carregarNotas();
                           },
-                          icon: const Icon(Icons.outbond_outlined),
-                          tooltip: 'Editar cadastro',
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            _confirmarExclusao(nota);
-                          },
-                          icon: Icon(Icons.delete_outline),
-                          tooltip: 'Excluir nota',
+                          child: const Text('Tentar novamente'),
                         ),
                       ],
                     ),
+                  )
+                : notasFiltradas.isEmpty
+                ? Center(
+                    child: Text(
+                      estado.notas.isEmpty
+                          ? 'Nenhuma nota cadastrada.'
+                          : 'Nenhuma nota encontrada.',
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: notasFiltradas.length,
+                    itemBuilder: (context, index) {
+                      final nota = notasFiltradas[index];
+
+                      return Card(
+                        child: ListTile(
+                          title: Text(nota.titulo),
+                          subtitle: Text(nota.conteudo),
+                          leading: const Icon(Icons.description_outlined),
+
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  _abrirCadastro(nota: nota);
+                                },
+                                icon: const Icon(Icons.outbond_outlined),
+                                tooltip: 'Editar cadastro',
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  _confirmarExclusao(nota);
+                                },
+                                icon: Icon(Icons.delete_outline),
+                                tooltip: 'Excluir nota',
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
 
       floatingActionButton: FloatingActionButton(
         onPressed: _abrirCadastro,
